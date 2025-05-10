@@ -27,6 +27,10 @@ export default function Login() {
 
   const handleLogin = async () => {
     try {
+      console.log('Attempting login with:', { username: email });
+      setStatus('Giriş yapılıyor...');
+      setStatusType('');
+      
       const response = await fetch('/api/admin/login', {
         method: 'POST',
         headers: {
@@ -38,21 +42,24 @@ export default function Login() {
         }),
       });
 
+      const data = await response.json();
+      console.log('Login response status:', response.status);
+      console.log('Login response data:', data);
+
       if (response.ok) {
-        const data = await response.json();
         localStorage.setItem('adminToken', data.token);
-        setStatus('Giriş başarılı!');
+        setStatus('Giriş başarılı! Yönlendiriliyorsunuz...');
         setStatusType('success');
         
         setTimeout(() => {
           router.push('/admin');
         }, 500);
       } else {
-        const error = await response.json();
-        setStatus(error.message || 'Geçersiz e-posta veya şifre!');
+        setStatus(data.message || 'Geçersiz e-posta veya şifre!');
         setStatusType('error');
       }
     } catch (error) {
+      console.error('Login error:', error);
       setStatus('Bir hata oluştu. Lütfen tekrar deneyin.');
       setStatusType('error');
     }
@@ -88,12 +95,18 @@ export default function Login() {
             placeholder="Şifre"
             className="input-field"
           />
-          <button onClick={handleLogin} className="btn-primary">
+          <button 
+            onClick={handleLogin} 
+            className="btn-primary w-full py-2 px-4 rounded"
+            disabled={!email || !password}
+          >
             Giriş Yap
           </button>
           {status && (
             <p className={`text-center mt-4 ${
-              statusType === 'success' ? 'text-neon-green' : 'text-red-500'
+              statusType === 'success' ? 'text-neon-green' : 
+              statusType === 'error' ? 'text-red-500' : 
+              'text-gray-400'
             }`}>
               {status}
             </p>

@@ -3,6 +3,5 @@
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
   "/admin/scoreboard": "pages/admin/scoreboard.js",
-  "/admin/add-score": "pages/admin/add-score.js",
-  "/api/scores": "pages/api/scores.js"
+  "/admin/add-score": "pages/admin/add-score.js"
 }
