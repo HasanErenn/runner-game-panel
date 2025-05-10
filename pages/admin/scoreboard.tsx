@@ -13,6 +13,7 @@ export default function Scoreboard() {
   const [scores, setScores] = useState<Score[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -31,8 +32,10 @@ export default function Scoreboard() {
       if (response.ok) {
         const data = await response.json();
         setScores(data);
+        setError('');
       } else {
-        setError('Skorlar yüklenirken bir hata oluştu');
+        const errorData = await response.json();
+        setError(errorData.error || 'Skorlar yüklenirken bir hata oluştu');
       }
     } catch (error) {
       setError('Bir hata oluştu');
@@ -42,12 +45,15 @@ export default function Scoreboard() {
   };
 
   const handleDelete = async (username: string) => {
+    if (isDeleting) return;
+    
     if (!confirm('Bu skoru silmek istediğinizden emin misiniz?')) {
       return;
     }
 
+    setIsDeleting(true);
     try {
-      const response = await fetch(`/api/scores?username=${username}`, {
+      const response = await fetch(`/api/scores?username=${encodeURIComponent(username)}`, {
         method: 'DELETE',
         headers: {
           'x-api-key': localStorage.getItem('adminToken') || '',
@@ -55,12 +61,16 @@ export default function Scoreboard() {
       });
 
       if (response.ok) {
-        fetchScores();
+        setError('');
+        await fetchScores();
       } else {
-        setError('Skor silinirken bir hata oluştu');
+        const errorData = await response.json();
+        setError(errorData.error || 'Skor silinirken bir hata oluştu');
       }
     } catch (error) {
       setError('Bir hata oluştu');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -107,13 +117,23 @@ export default function Scoreboard() {
                     <td className="p-4">
                       <button
                         onClick={() => handleDelete(score.username)}
-                        className="text-red-500 hover:text-red-400 transition-colors"
+                        disabled={isDeleting}
+                        className={`text-red-500 hover:text-red-400 transition-colors ${
+                          isDeleting ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
                       >
-                        Sil
+                        {isDeleting ? 'Siliniyor...' : 'Sil'}
                       </button>
                     </td>
                   </tr>
                 ))}
+                {scores.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="text-center p-4 text-gray-400">
+                      Henüz hiç skor kaydedilmemiş.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

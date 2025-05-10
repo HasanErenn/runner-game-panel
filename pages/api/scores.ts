@@ -1,10 +1,25 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { PrismaClient } from '../../generated/prisma';
+import jwt from 'jsonwebtoken';
 
 const prisma = new PrismaClient();
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
-// API anahtarını environment variable'dan al
-const ADMIN_API_KEY = process.env.ADMIN_API_KEY;
+// Token doğrulama fonksiyonu
+const verifyToken = (token: string): boolean => {
+  try {
+    jwt.verify(token, JWT_SECRET);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+// API anahtarı kontrolü
+function isValidAdminRequest(req: NextApiRequest): boolean {
+  const token = req.headers['x-api-key'] as string;
+  return token ? verifyToken(token) : false;
+}
 
 // Yasaklı kelimeleri içeren basit bir liste
 const FORBIDDEN_WORDS = [
@@ -13,12 +28,6 @@ const FORBIDDEN_WORDS = [
   // İngilizce yasaklı kelimeler
   'fuck', 'shit', 'stupid', 'idiot', 'noob'
 ];
-
-// API anahtarı kontrolü
-function isValidAdminRequest(req: NextApiRequest): boolean {
-  const apiKey = req.headers['x-api-key'];
-  return apiKey === ADMIN_API_KEY;
-}
 
 function containsForbiddenWords(username: string): boolean {
   const lowercaseUsername = username.toLowerCase();
@@ -39,9 +48,9 @@ function isValidUsername(username: string): boolean {
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // DELETE endpoint'i ekle
+  // DELETE endpoint'i
   if (req.method === 'DELETE') {
-    // Admin API anahtarı kontrolü
+    // Admin token kontrolü
     if (!isValidAdminRequest(req)) {
       return res.status(401).json({ error: 'Yetkisiz erişim' });
     }
@@ -53,16 +62,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(400).json({ error: 'Geçersiz kullanıcı adı' });
       }
 
-      const result = await prisma.score.delete({
+      const result = await prisma.score.deleteMany({
         where: { username },
       });
       
-      if (!result) {
+      if (result.count === 0) {
         return res.status(404).json({ error: 'Kullanıcı bulunamadı' });
       }
 
       return res.status(200).json({ message: 'Skor başarıyla silindi' });
     } catch (error) {
+      console.error('Skor silme hatası:', error);
       return res.status(500).json({ error: 'Skor silinemedi' });
     }
   }
@@ -91,6 +101,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (error.code === 'P2002') { // Unique constraint failed
         return res.status(409).json({ error: 'Bu kullanıcı adı zaten kullanımda' });
       }
+      console.error('Skor kaydetme hatası:', error);
       return res.status(500).json({ error: 'Skor kaydedilemedi' });
     }
   }
@@ -104,6 +115,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       
       return res.status(200).json(scores);
     } catch (error) {
+      console.error('Skor listeleme hatası:', error);
       return res.status(500).json({ error: 'Skorlar alınamadı' });
     }
   }
