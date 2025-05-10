@@ -106,11 +106,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const { username, score } = req.body;
       
       if (!username || typeof username !== 'string' || !score || typeof score !== 'number') {
-        return res.status(400).json({ error: 'Geçersiz kullanıcı adı veya skor' });
+        return res.status(400).json({ 
+          success: false,
+          message: 'Geçersiz kullanıcı adı veya skor',
+          error: 'INVALID_INPUT'
+        });
       }
 
       if (!isValidUsername(username)) {
-        return res.status(400).json({ error: 'Geçersiz kullanıcı adı formatı' });
+        return res.status(400).json({ 
+          success: false,
+          message: 'Geçersiz kullanıcı adı formatı',
+          error: 'INVALID_USERNAME_FORMAT'
+        });
       }
 
       // Kullanıcının en yüksek skorunu güncelle veya yeni skor ekle
@@ -120,13 +128,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         create: { username, score },
       });
       
-      return res.status(200).json({ message: 'Skor başarıyla kaydedildi' });
+      return res.status(200).json({ 
+        success: true,
+        message: 'Skor başarıyla kaydedildi',
+        data: result
+      });
     } catch (error) {
       if (error.code === 'P2002') { // Unique constraint failed
-        return res.status(409).json({ error: 'Bu kullanıcı adı zaten kullanımda' });
+        return res.status(409).json({ 
+          success: false,
+          message: 'Bu kullanıcı adı zaten kullanımda',
+          error: 'USERNAME_TAKEN'
+        });
       }
       console.error('Skor kaydetme hatası:', error);
-      return res.status(500).json({ error: 'Skor kaydedilemedi' });
+      return res.status(500).json({ 
+        success: false,
+        message: 'Skor kaydedilemedi',
+        error: 'SERVER_ERROR'
+      });
     }
   }
   
@@ -150,18 +170,41 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const username = req.query.username as string;
       
       if (!username || !isValidUsername(username)) {
-        return res.status(400).end();
+        return res.status(400).json({
+          success: false,
+          message: 'Geçersiz kullanıcı adı formatı',
+          error: 'INVALID_USERNAME_FORMAT'
+        });
       }
 
       const result = await prisma.score.findUnique({
         where: { username },
       });
       
-      return res.status(result ? 409 : 200).end();
+      if (result) {
+        return res.status(409).json({
+          success: false,
+          message: 'Bu kullanıcı adı zaten kullanımda',
+          error: 'USERNAME_TAKEN'
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: 'Kullanıcı adı kullanılabilir'
+      });
     } catch (error) {
-      return res.status(500).end();
+      return res.status(500).json({
+        success: false,
+        message: 'Sunucu hatası',
+        error: 'SERVER_ERROR'
+      });
     }
   }
   
-  return res.status(405).json({ error: 'Method not allowed' });
+  return res.status(405).json({ 
+    success: false,
+    message: 'Method not allowed',
+    error: 'METHOD_NOT_ALLOWED'
+  });
 } 

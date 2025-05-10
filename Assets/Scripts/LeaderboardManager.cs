@@ -6,6 +6,14 @@ using System;
 using TMPro;
 
 [Serializable]
+public class ApiResponse
+{
+    public bool success;
+    public string message;
+    public string error;
+}
+
+[Serializable]
 public class ScoreEntry
 {
     public string username;
@@ -27,9 +35,14 @@ public class LeaderboardManager : MonoBehaviour
     [SerializeField]
     private TextMeshProUGUI errorText;
 
+    public delegate void OnUsernameResult(bool success, string message);
+    public delegate void OnScoreSubmitResult(bool success, string message);
+
+    public event OnUsernameResult OnUsernameChecked;
+    public event OnScoreSubmitResult OnScoreSubmitted;
+
     private void Start()
     {
-        // Eğer daha önce kaydedilmiş bir kullanıcı adı varsa
         username = PlayerPrefs.GetString("Username", "");
         if (string.IsNullOrEmpty(username))
         {
@@ -52,34 +65,36 @@ public class LeaderboardManager : MonoBehaviour
         if (string.IsNullOrEmpty(newUsername))
         {
             ShowError("Kullanıcı adı boş olamaz!");
+            OnUsernameChecked?.Invoke(false, "Kullanıcı adı boş olamaz!");
             yield break;
         }
 
-        // Kullanıcı adı kontrolü için HEAD isteği
         using (UnityWebRequest request = UnityWebRequest.Head($"{apiUrl}?username={UnityWebRequest.EscapeURL(newUsername)}"))
         {
             yield return request.SendWebRequest();
 
             if (request.result == UnityWebRequest.Result.Success)
             {
-                // Kullanıcı adı kullanılabilir
                 username = newUsername;
                 PlayerPrefs.SetString("Username", username);
                 PlayerPrefs.Save();
                 usernamePanel.SetActive(false);
                 errorText.text = "";
-            }
-            else if (request.responseCode == 409)
-            {
-                ShowError("Bu kullanıcı adı zaten kullanımda!");
-            }
-            else if (request.responseCode == 400)
-            {
-                ShowError("Geçersiz kullanıcı adı formatı!");
+                OnUsernameChecked?.Invoke(true, "Kullanıcı adı başarıyla kaydedildi!");
             }
             else
             {
-                ShowError("Bir hata oluştu, lütfen tekrar deneyin.");
+                string message = "Bir hata oluştu";
+                if (request.responseCode == 409)
+                {
+                    message = "Bu kullanıcı adı zaten kullanımda!";
+                }
+                else if (request.responseCode == 400)
+                {
+                    message = "Geçersiz kullanıcı adı formatı!";
+                }
+                ShowError(message);
+                OnUsernameChecked?.Invoke(false, message);
             }
         }
     }
@@ -94,6 +109,7 @@ public class LeaderboardManager : MonoBehaviour
         if (string.IsNullOrEmpty(username))
         {
             ShowUsernamePanel();
+            OnScoreSubmitted?.Invoke(false, "Önce kullanıcı adı belirlemelisiniz!");
             return;
         }
         StartCoroutine(SubmitScoreCoroutine(score));
@@ -123,11 +139,32 @@ public class LeaderboardManager : MonoBehaviour
 
         if (request.result == UnityWebRequest.Result.Success)
         {
-            Debug.Log("Skor başarıyla gönderildi!");
+            var response = JsonUtility.FromJson<ApiResponse>(request.downloadHandler.text);
+            OnScoreSubmitted?.Invoke(response.success, response.message);
+            
+            if (response.success)
+            {
+                Debug.Log("Skor başarıyla gönderildi: " + response.message);
+            }
+            else
+            {
+                Debug.LogWarning("Skor gönderimi başarısız: " + response.message);
+            }
         }
         else
         {
-            Debug.LogError("Skor gönderilirken hata: " + request.error);
+            string errorMessage = "Skor gönderilirken bir hata oluştu";
+            if (request.responseCode == 400)
+            {
+                errorMessage = "Geçersiz skor değeri";
+            }
+            else if (request.responseCode == 409)
+            {
+                errorMessage = "Bu kullanıcı adı zaten kullanımda";
+            }
+            
+            Debug.LogError("Skor gönderme hatası: " + errorMessage);
+            OnScoreSubmitted?.Invoke(false, errorMessage);
         }
     }
 

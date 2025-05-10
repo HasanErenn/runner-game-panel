@@ -7,6 +7,23 @@ Bu doküman, Unity ile geliştirilen oyunumuz tarafından kullanılacak API endp
 - Base URL: `https://runnergamepanel.vercel.app/api`
 - Tüm istekler JSON formatında gönderilmeli ve yanıt JSON döner.
 - CORS: Tüm originlere izin verilmiştir (`Access-Control-Allow-Origin: *`).
+- Tüm yanıtlar aşağıdaki genel formatı takip eder:
+  ```json
+  {
+    "success": boolean,    // İşlemin başarılı olup olmadığı
+    "message": string,     // Kullanıcı dostu mesaj
+    "error": string,       // (Opsiyonel) Hata kodu
+    "data": any           // (Opsiyonel) Yanıt verisi
+  }
+  ```
+
+### Hata Kodları
+
+- `INVALID_INPUT`: Geçersiz girdi parametreleri
+- `INVALID_USERNAME_FORMAT`: Geçersiz kullanıcı adı formatı
+- `USERNAME_TAKEN`: Kullanıcı adı zaten kullanımda
+- `SERVER_ERROR`: Sunucu hatası
+- `METHOD_NOT_ALLOWED`: Desteklenmeyen HTTP metodu
 
 ### Ortam Değişkenleri
 
@@ -39,8 +56,12 @@ Bu doküman, Unity ile geliştirilen oyunumuz tarafından kullanılacak API endp
 - Body (JSON):
   ```json
   {
-    "id": 1,
-    "username": "admin_kullanici_adi"
+    "success": true,
+    "message": "Admin hesabı başarıyla oluşturuldu",
+    "data": {
+      "id": 1,
+      "username": "admin_kullanici_adi"
+    }
   }
   ```
 
@@ -73,7 +94,11 @@ Bu doküman, Unity ile geliştirilen oyunumuz tarafından kullanılacak API endp
 - Body (JSON):
   ```json
   {
-    "token": "<JWT_TOKEN>"
+    "success": true,
+    "message": "Giriş başarılı",
+    "data": {
+      "token": "<JWT_TOKEN>"
+    }
   }
   ```
 
@@ -99,19 +124,22 @@ Bu doküman, Unity ile geliştirilen oyunumuz tarafından kullanılacak API endp
 - Status: `200 OK`
 - Body (JSON):
   ```json
-  [
-    {
-      "id": 1,
-      "username": "player1",
-      "score": 1500
-    },
-    {
-      "id": 2,
-      "username": "player2",
-      "score": 1200
-    },
-    ...
-  ]
+  {
+    "success": true,
+    "message": "Skorlar başarıyla alındı",
+    "data": [
+      {
+        "id": 1,
+        "username": "player1",
+        "score": 1500
+      },
+      {
+        "id": 2,
+        "username": "player2",
+        "score": 1200
+      }
+    ]
+  }
   ```
 
 #### Hata Durumları
@@ -141,13 +169,33 @@ Bu doküman, Unity ile geliştirilen oyunumuz tarafından kullanılacak API endp
 - Body (JSON):
   ```json
   {
-    "message": "Skor başarıyla kaydedildi"
+    "success": true,
+    "message": "Skor başarıyla kaydedildi",
+    "data": {
+      "id": 1,
+      "username": "player1",
+      "score": 1200
+    }
   }
   ```
 
 #### Hata Durumları
 - `400 Bad Request`: Geçersiz kullanıcı adı veya skor.
+  ```json
+  {
+    "success": false,
+    "message": "Geçersiz kullanıcı adı veya skor",
+    "error": "INVALID_INPUT"
+  }
+  ```
 - `409 Conflict`: Kullanıcı adı formatı geçersiz veya zaten kullanımda.
+  ```json
+  {
+    "success": false,
+    "message": "Bu kullanıcı adı zaten kullanımda",
+    "error": "USERNAME_TAKEN"
+  }
+  ```
 - `500 Internal Server Error`: Skor kaydedilemedi.
 
 ---
@@ -160,10 +208,33 @@ Bu doküman, Unity ile geliştirilen oyunumuz tarafından kullanılacak API endp
 - Method: `HEAD`
 - URL: `/api/scores?username=player1`
 
-#### Yanıt Kodları
-- `200 OK`: Kullanıcı adı boşta.
-- `409 Conflict`: Kullanıcı adı zaten var.
+#### Başarılı Yanıt
+- Status: `200 OK`
+- Body (JSON):
+  ```json
+  {
+    "success": true,
+    "message": "Kullanıcı adı kullanılabilir"
+  }
+  ```
+
+#### Hata Durumları
 - `400 Bad Request`: Geçersiz formatta kullanıcı adı.
+  ```json
+  {
+    "success": false,
+    "message": "Geçersiz kullanıcı adı formatı",
+    "error": "INVALID_USERNAME_FORMAT"
+  }
+  ```
+- `409 Conflict`: Kullanıcı adı zaten var.
+  ```json
+  {
+    "success": false,
+    "message": "Bu kullanıcı adı zaten kullanımda",
+    "error": "USERNAME_TAKEN"
+  }
+  ```
 - `500 Internal Server Error`: Sunucu hatası.
 
 ---
@@ -183,6 +254,7 @@ Bu doküman, Unity ile geliştirilen oyunumuz tarafından kullanılacak API endp
 - Body (JSON):
   ```json
   {
+    "success": true,
     "message": "Skor başarıyla silindi"
   }
   ```
@@ -224,7 +296,15 @@ public class ApiClient : MonoBehaviour
 
             if (request.result == UnityWebRequest.Result.Success)
             {
-                Debug.Log("Skor gönderildi: " + request.downloadHandler.text);
+                var response = JsonUtility.FromJson<ApiResponse>(request.downloadHandler.text);
+                if (response.success)
+                {
+                    Debug.Log("Skor gönderildi: " + response.message);
+                }
+                else
+                {
+                    Debug.LogWarning("Skor gönderimi başarısız: " + response.message);
+                }
             }
             else
             {
