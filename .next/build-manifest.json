@@ -1,52 +1,37 @@
 {
   "polyfillFiles": [
-    "static/chunks/polyfills-42372ed130431b0a.js"
+    "static/chunks/polyfills.js"
   ],
-  "devFiles": [],
+  "devFiles": [
+    "static/chunks/react-refresh.js"
+  ],
   "ampDevFiles": [],
   "lowPriorityFiles": [
-    "static/jRcxZmUl-svCkEWJj8WkO/_buildManifest.js",
-    "static/jRcxZmUl-svCkEWJj8WkO/_ssgManifest.js"
+    "static/development/_buildManifest.js",
+    "static/development/_ssgManifest.js"
   ],
   "rootMainFiles": [],
   "rootMainFilesTree": {},
   "pages": {
     "/_app": [
-      "static/chunks/webpack-8cac0b4b405cede1.js",
-      "static/chunks/framework-f75312fc4004b783.js",
-      "static/chunks/main-a21c9d8e51d3126e.js",
-      "static/css/c7e7fb6e9096d955.css",
-      "static/chunks/pages/_app-48e49d6afe408d10.js"
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/_app.js"
     ],
     "/_error": [
-      "static/chunks/webpack-8cac0b4b405cede1.js",
-      "static/chunks/framework-f75312fc4004b783.js",
-      "static/chunks/main-a21c9d8e51d3126e.js",
-      "static/chunks/pages/_error-41608b100cc61246.js"
-    ],
-    "/admin": [
-      "static/chunks/webpack-8cac0b4b405cede1.js",
-      "static/chunks/framework-f75312fc4004b783.js",
-      "static/chunks/main-a21c9d8e51d3126e.js",
-      "static/chunks/pages/admin-7e16c090792cec01.js"
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/_error.js"
     ],
     "/admin/add-score": [
-      "static/chunks/webpack-8cac0b4b405cede1.js",
-      "static/chunks/framework-f75312fc4004b783.js",
-      "static/chunks/main-a21c9d8e51d3126e.js",
-      "static/chunks/pages/admin/add-score-90dc869b43b33b28.js"
-    ],
-    "/admin/login": [
-      "static/chunks/webpack-8cac0b4b405cede1.js",
-      "static/chunks/framework-f75312fc4004b783.js",
-      "static/chunks/main-a21c9d8e51d3126e.js",
-      "static/chunks/pages/admin/login-c53563c46fd32ed3.js"
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/admin/add-score.js"
     ],
     "/admin/scoreboard": [
-      "static/chunks/webpack-8cac0b4b405cede1.js",
-      "static/chunks/framework-f75312fc4004b783.js",
-      "static/chunks/main-a21c9d8e51d3126e.js",
-      "static/chunks/pages/admin/scoreboard-98766bcd64c44909.js"
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/admin/scoreboard.js"
     ]
   },
   "ampFirstPages": []
