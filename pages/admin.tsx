@@ -7,24 +7,23 @@ export default function AdminPanel() {
   const [username, setUsername] = useState('');
   const [score, setScore] = useState('');
   const [status, setStatus] = useState('');
-  const [statusColor, setStatusColor] = useState('black');
+  const [statusType, setStatusType] = useState<'success' | 'error' | ''>('');
 
   const handleLogin = () => {
-    // Basit bir e-posta ve şifre kontrolü
     if (email === 'admin@example.com' && password === 'securepassword') {
       setIsAuthenticated(true);
       setStatus('Giriş başarılı!');
-      setStatusColor('green');
+      setStatusType('success');
     } else {
       setStatus('Geçersiz e-posta veya şifre!');
-      setStatusColor('red');
+      setStatusType('error');
     }
   };
 
   const handleAddScore = async () => {
     if (!username || !score) {
       setStatus('Kullanıcı adı ve skor boş olamaz!');
-      setStatusColor('red');
+      setStatusType('error');
       return;
     }
 
@@ -39,63 +38,107 @@ export default function AdminPanel() {
 
       if (response.ok) {
         setStatus('Skor başarıyla eklendi!');
-        setStatusColor('green');
+        setStatusType('success');
         setUsername('');
         setScore('');
       } else {
         const errorData = await response.json();
         setStatus(errorData.error || 'Bir hata oluştu.');
-        setStatusColor('red');
+        setStatusType('error');
       }
     } catch (error) {
       setStatus('Bir hata oluştu: ' + error.message);
-      setStatusColor('red');
+      setStatusType('error');
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      if (!isAuthenticated) {
+        handleLogin();
+      } else {
+        handleAddScore();
+      }
     }
   };
 
   if (!isAuthenticated) {
     return (
-      <div style={{ padding: '20px' }}>
-        <h1>Yönetici Girişi</h1>
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="E-posta"
-          style={{ marginRight: '10px' }}
-        />
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Şifre"
-          style={{ marginRight: '10px' }}
-        />
-        <button onClick={handleLogin}>Giriş Yap</button>
-        <p style={{ color: statusColor }}>{status}</p>
+      <div className="min-h-screen w-full flex items-center justify-center bg-dark p-4">
+        <div className="form-container">
+          <h1 className="text-3xl font-bold text-center mb-8 text-neon-purple">
+            Yönetici Girişi
+          </h1>
+          <div className="space-y-4">
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="E-posta"
+              className="input-field"
+              autoFocus
+            />
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Şifre"
+              className="input-field"
+            />
+            <button onClick={handleLogin} className="btn-primary">
+              Giriş Yap
+            </button>
+            {status && (
+              <p className={`text-center mt-4 ${
+                statusType === 'success' ? 'text-neon-green' : 'text-red-500'
+              }`}>
+                {status}
+              </p>
+            )}
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: '20px' }}>
-      <h1>Yönetici Paneli</h1>
-      <input
-        type="text"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-        placeholder="Kullanıcı adı"
-        style={{ marginRight: '10px' }}
-      />
-      <input
-        type="number"
-        value={score}
-        onChange={(e) => setScore(e.target.value)}
-        placeholder="Skor"
-        style={{ marginRight: '10px' }}
-      />
-      <button onClick={handleAddScore}>Skor Ekle</button>
-      <p style={{ color: statusColor }}>{status}</p>
+    <div className="min-h-screen w-full flex items-center justify-center bg-dark p-4">
+      <div className="form-container">
+        <h1 className="text-3xl font-bold text-center mb-8 text-neon-purple">
+          Yönetici Paneli
+        </h1>
+        <div className="space-y-4">
+          <input
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder="Kullanıcı adı"
+            className="input-field"
+            autoFocus
+          />
+          <input
+            type="number"
+            value={score}
+            onChange={(e) => setScore(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder="Skor"
+            className="input-field"
+          />
+          <button onClick={handleAddScore} className="btn-primary">
+            Skor Ekle
+          </button>
+          {status && (
+            <p className={`text-center mt-4 ${
+              statusType === 'success' ? 'text-neon-green' : 'text-red-500'
+            }`}>
+              {status}
+            </p>
+          )}
+        </div>
+      </div>
     </div>
   );
 } 
