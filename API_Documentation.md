@@ -4,7 +4,7 @@ Bu doküman, Unity ile geliştirilen oyunumuz tarafından kullanılacak API endp
 
 ## Temel Bilgiler
 
-- Base URL: `https://<YOUR_DOMAIN>/api`
+- Base URL: `https://runnergamepanel.vercel.app/api`
 - Tüm istekler JSON formatında gönderilmeli ve yanıt JSON döner.
 - CORS: Tüm originlere izin verilmiştir (`Access-Control-Allow-Origin: *`).
 
@@ -205,7 +205,7 @@ using UnityEngine;
 
 public class ApiClient : MonoBehaviour
 {
-    private string baseUrl = "https://yourdomain.com/api";
+    private string baseUrl = "https://runnergamepanel.vercel.app/api";
 
     public IEnumerator SubmitScore(string username, int score)
     {
