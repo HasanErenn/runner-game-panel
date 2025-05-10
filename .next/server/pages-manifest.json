@@ -1,7 +1,13 @@
 {
   "/_app": "pages/_app.js",
+  "/admin/add-score": "pages/admin/add-score.html",
+  "/admin": "pages/admin.html",
+  "/admin/scoreboard": "pages/admin/scoreboard.html",
+  "/admin/login": "pages/admin/login.html",
+  "/api/admin/login": "pages/api/admin/login.js",
+  "/api/admin/register": "pages/api/admin/register.js",
+  "/api/scores": "pages/api/scores.js",
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
-  "/admin/scoreboard": "pages/admin/scoreboard.js",
-  "/admin/add-score": "pages/admin/add-score.js"
+  "/404": "pages/404.html"
 }
