@@ -49,8 +49,8 @@ function isValidUsername(username: string): boolean {
   // En az 3, en fazla 20 karakter
   if (username.length < 3 || username.length > 20) return false;
   
-  // Sadece harf, rakam ve alt çizgi içerebilir
-  if (!/^[a-zA-Z0-9_]+$/.test(username)) return false;
+  // Türkçe karakterler, harf, rakam ve alt çizgi içerebilir
+  if (!/^[a-zA-ZğĞüÜşŞıİöÖçÇ0-9_]+$/.test(username)) return false;
   
   // Yasaklı kelimeler kontrolü
   if (containsForbiddenWords(username)) return false;
@@ -105,7 +105,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try {
       const { username, score } = req.body;
       
-      if (!username || typeof username !== 'string' || !score || typeof score !== 'number') {
+      if (!username || typeof username !== 'string' || typeof score !== 'number') {
         return res.status(400).json({ 
           success: false,
           message: 'Geçersiz kullanıcı adı veya skor',

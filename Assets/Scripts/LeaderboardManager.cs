@@ -122,13 +122,11 @@ public class LeaderboardManager : MonoBehaviour
 
     private IEnumerator SubmitScoreCoroutine(int score)
     {
-        var scoreData = new Dictionary<string, string>
-        {
-            { "username", username },
-            { "score", score.ToString() }
-        };
+        var jsonData = $"{{\"username\":\"{username}\",\"score\":{score}}}";
 
-        var jsonData = JsonUtility.ToJson(scoreData);
+        Debug.Log($"Gönderilen skor: {score} - Kullanıcı: {username}");
+        Debug.Log("JSON içeriği: " + jsonData);
+
         var request = new UnityWebRequest(apiUrl, "POST");
         byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
         request.uploadHandler = new UploadHandlerRaw(bodyRaw);
@@ -136,6 +134,9 @@ public class LeaderboardManager : MonoBehaviour
         request.SetRequestHeader("Content-Type", "application/json");
 
         yield return request.SendWebRequest();
+
+        Debug.Log($"Sunucu yanıtı: {request.downloadHandler.text}");
+        Debug.Log($"Yanıt kodu: {request.responseCode}");
 
         if (request.result == UnityWebRequest.Result.Success)
         {
@@ -153,17 +154,23 @@ public class LeaderboardManager : MonoBehaviour
         }
         else
         {
-            string errorMessage = "Skor gönderilirken bir hata oluştu";
+            string errorMessage = $"Skor gönderilirken bir hata oluştu: {request.responseCode}";
+
             if (request.responseCode == 400)
             {
-                errorMessage = "Geçersiz skor değeri";
+                errorMessage = "Geçersiz kullanıcı adı formatı veya skor.";
             }
             else if (request.responseCode == 409)
             {
-                errorMessage = "Bu kullanıcı adı zaten kullanımda";
+                errorMessage = "Bu kullanıcı adı zaten kullanımda.";
+            }
+            else if (request.responseCode == 500)
+            {
+                errorMessage = "Sunucu hatası.";
             }
             
-            Debug.LogError("Skor gönderme hatası: " + errorMessage);
+            Debug.LogError($"Skor gönderme hatası: {errorMessage}");
+            Debug.LogError($"Sunucu yanıtı: {request.downloadHandler.text}");
             OnScoreSubmitted?.Invoke(false, errorMessage);
         }
     }
