@@ -46,15 +46,42 @@ function containsForbiddenWords(username: string): boolean {
 }
 
 function isValidUsername(username: string): boolean {
-  // En az 3, en fazla 20 karakter
-  if (username.length < 3 || username.length > 20) return false;
+  console.log('Checking username:', username);
   
-  // Türkçe karakterler, harf, rakam ve alt çizgi içerebilir
-  if (!/^[a-zA-ZğĞüÜşŞıİöÖçÇ0-9_]+$/.test(username)) return false;
+  // En az 3, en fazla 20 karakter
+  if (username.length < 3 || username.length > 20) {
+    console.log('Length check failed');
+    return false;
+  }
+  
+  // Türkçe karakterler, harf, rakam ve izin verilen noktalama işaretleri
+  const validCharactersRegex = /^[a-zA-ZğĞüÜşŞıİöÖçÇ0-9\-_.,:;!?@#$%&*()+=]+$/;
+  if (!validCharactersRegex.test(username)) {
+    console.log('Character validation failed');
+    return false;
+  }
+  
+  // Ardışık noktalama işareti kontrolü
+  const consecutivePunctuationRegex = /[\-_.,:;!?@#$%&*()+=]{2,}/;
+  if (consecutivePunctuationRegex.test(username)) {
+    console.log('Consecutive punctuation check failed');
+    return false;
+  }
+  
+  // Başlangıç ve bitiş kontrolü - noktalama işareti ile başlayıp bitemez
+  const startsOrEndsWithPunctuationRegex = /^[\-_.,:;!?@#$%&*()+=]|[\-_.,:;!?@#$%&*()+=]$/;
+  if (startsOrEndsWithPunctuationRegex.test(username)) {
+    console.log('Start/end punctuation check failed');
+    return false;
+  }
   
   // Yasaklı kelimeler kontrolü
-  if (containsForbiddenWords(username)) return false;
+  if (containsForbiddenWords(username)) {
+    console.log('Forbidden words check failed');
+    return false;
+  }
   
+  console.log('Username validation passed');
   return true;
 }
 
@@ -105,7 +132,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try {
       const { username, score } = req.body;
       
+      console.log('Received request:', { username, score });
+      
       if (!username || typeof username !== 'string' || typeof score !== 'number') {
+        console.log('Invalid input types:', { username, score });
         return res.status(400).json({ 
           success: false,
           message: 'Geçersiz kullanıcı adı veya skor',
@@ -114,6 +144,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       if (!isValidUsername(username)) {
+        console.log('Username validation failed for:', username);
         return res.status(400).json({ 
           success: false,
           message: 'Geçersiz kullanıcı adı formatı',

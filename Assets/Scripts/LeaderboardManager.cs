@@ -91,7 +91,13 @@ public class LeaderboardManager : MonoBehaviour
                 }
                 else if (request.responseCode == 400)
                 {
-                    message = "Geçersiz kullanıcı adı formatı!";
+                    message = "Kullanıcı adı 3-20 karakter arasında olmalı ve şunları içerebilir:\n" +
+                             "- Harfler (Türkçe karakterler dahil)\n" +
+                             "- Rakamlar\n" +
+                             "- Noktalama işaretleri (.-_,?!@#$%&*()+=:;)\n" +
+                             "Kurallar:\n" +
+                             "- Noktalama işareti ile başlayamaz ve bitemez\n" +
+                             "- Ardışık noktalama işareti kullanılamaz";
                 }
                 ShowError(message);
                 OnUsernameChecked?.Invoke(false, message);
@@ -122,9 +128,12 @@ public class LeaderboardManager : MonoBehaviour
 
     private IEnumerator SubmitScoreCoroutine(int score)
     {
-        var jsonData = $"{{\"username\":\"{username}\",\"score\":{score}}}";
+        // URL encode the username to handle special characters
+        string encodedUsername = UnityWebRequest.EscapeURL(username);
+        var jsonData = JsonUtility.ToJson(new ScoreData { username = username, score = score });
 
         Debug.Log($"Gönderilen skor: {score} - Kullanıcı: {username}");
+        Debug.Log($"URL-encoded username: {encodedUsername}");
         Debug.Log("JSON içeriği: " + jsonData);
 
         var request = new UnityWebRequest(apiUrl, "POST");
@@ -158,7 +167,13 @@ public class LeaderboardManager : MonoBehaviour
 
             if (request.responseCode == 400)
             {
-                errorMessage = "Geçersiz kullanıcı adı formatı veya skor.";
+                errorMessage = "Kullanıcı adı 3-20 karakter arasında olmalı ve şunları içerebilir:\n" +
+                             "- Harfler (Türkçe karakterler dahil)\n" +
+                             "- Rakamlar\n" +
+                             "- Noktalama işaretleri (.-_,?!@#$%&*()+=)\n" +
+                             "Kurallar:\n" +
+                             "- Noktalama işareti ile başlayamaz ve bitemez\n" +
+                             "- Ardışık noktalama işareti kullanılamaz";
             }
             else if (request.responseCode == 409)
             {
@@ -173,6 +188,13 @@ public class LeaderboardManager : MonoBehaviour
             Debug.LogError($"Sunucu yanıtı: {request.downloadHandler.text}");
             OnScoreSubmitted?.Invoke(false, errorMessage);
         }
+    }
+
+    [Serializable]
+    private class ScoreData
+    {
+        public string username;
+        public int score;
     }
 
     private IEnumerator GetLeaderboardCoroutine(System.Action<List<ScoreEntry>> callback)
